@@ -1,5 +1,6 @@
 import 'package:expend_tracker/cons/app_color.dart';
 import 'package:expend_tracker/cons/app_cons.dart';
+import 'package:expend_tracker/screen/add_expense_screen.dart';
 import 'package:expend_tracker/screen/card_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -110,10 +111,9 @@ class HomeScreen extends StatelessWidget {
               color: Colors.white,
             ),
             backgroundColor: redColor,
-            label: 'Add OutCome',
+            label: 'Add Expense',
             labelStyle: TextStyle(fontSize: 18.0),
-            onTap: () => print('FIRST CHILD'),
-            onLongPress: () => print('FIRST CHILD LONG PRESS'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddExpenseScreen())),
           ),
           SpeedDialChild(
             child: Icon(
@@ -124,7 +124,6 @@ class HomeScreen extends StatelessWidget {
             label: 'Add Income',
             labelStyle: TextStyle(fontSize: 18.0),
             onTap: () => print('SECOND CHILD'),
-            onLongPress: () => print('SECOND CHILD LONG PRESS'),
           ),
         ],
       ),
