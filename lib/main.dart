@@ -1,13 +1,19 @@
 import 'package:expend_tracker/screen/home_screen.dart';
+import 'package:expend_tracker/utils/app_db.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   // runApp(
   //   DevicePreview(
   //     enabled: !kReleaseMode,
   //     builder: (context) => MyApp(), // Wrap your app
   //   ),
   // );
+  DBHelper db = DBHelper();
+  // await db.deleteDB();
+  await db.initDB();
+
   runApp(MyApp());
 }
 

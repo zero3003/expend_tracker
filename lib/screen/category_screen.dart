@@ -1,8 +1,11 @@
+import 'package:expend_tracker/cons/enum.dart';
+import 'package:expend_tracker/utils/app_db.dart';
+import 'package:expend_tracker/widget/add_category.dart';
 import 'package:flutter/material.dart';
 
 class ManageCategoryScreen extends StatefulWidget {
-  const ManageCategoryScreen({Key? key}) : super(key: key);
-
+  const ManageCategoryScreen({Key? key, required this.transactionType}) : super(key: key);
+  final TransactionType transactionType;
   @override
   _ManageCategoryScreenState createState() => _ManageCategoryScreenState();
 }
@@ -27,24 +30,15 @@ class _ManageCategoryScreenState extends State<ManageCategoryScreen> {
           showDialog(
               context: context,
               builder: (context) {
-                return AlertDialog(
-                  title: Text('Add Category'),
-                  content: TextField(),
-                  actions: [
-                    OutlinedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(elevation: 0),
-                      child: Text('Save'),
-                    ),
-                  ],
+                return AddCategoryDialog(
+                  onSave: (text, icon) async {
+                    DBHelper db = DBHelper();
+                    await db.insertCategory(
+                      name: text,
+                      icon: icon,
+                      transactionType: widget.transactionType,
+                    );
+                  },
                 );
               });
         },
@@ -70,6 +64,7 @@ class _ManageCategoryScreenState extends State<ManageCategoryScreen> {
                     child: InkWell(
                       onTap: () {},
                       child: ListTile(
+                        leading: Icon(Icons.transfer_within_a_station_sharp),
                         title: Text('Transportation'),
                         trailing: PopupMenuButton<int>(
                           icon: Icon(Icons.menu),

@@ -1,9 +1,11 @@
 import 'package:expend_tracker/cons/app_color.dart';
+import 'package:expend_tracker/cons/enum.dart';
 import 'package:expend_tracker/screen/category_screen.dart';
 import 'package:flutter/material.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  AddExpenseScreen({Key? key}) : super(key: key);
+  AddExpenseScreen({Key? key, required this.transactionType}) : super(key: key);
+  final TransactionType transactionType;
 
   @override
   _AddExpenseScreenState createState() => _AddExpenseScreenState();
@@ -55,7 +57,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ManageCategoryScreen(),
+                          builder: (_) => ManageCategoryScreen(
+                            transactionType: widget.transactionType,
+                          ),
                         ),
                       );
                     },

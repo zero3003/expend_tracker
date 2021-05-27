@@ -1,18 +1,39 @@
 import 'package:expend_tracker/cons/app_color.dart';
 import 'package:expend_tracker/cons/app_cons.dart';
-import 'package:expend_tracker/screen/add_expense_screen.dart';
-import 'package:expend_tracker/screen/card_info.dart';
+import 'package:expend_tracker/cons/enum.dart';
+import 'package:expend_tracker/model/transaction_model.dart';
+import 'package:expend_tracker/screen/add_transaction_screen.dart';
+import 'package:expend_tracker/utils/app_db.dart';
+import 'package:expend_tracker/widget/card_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  DBHelper db = DBHelper();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Learn UI'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: InkWell(
+              onTap: () {
+                db.deleteDB();
+              },
+              child: Icon(Icons.reset_tv),
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -51,17 +72,32 @@ class HomeScreen extends StatelessWidget {
               height: 8,
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: 10,
-                itemBuilder: (context, idx) {
-                  return ListTile(
-                    leading: Icon(Icons.motorcycle),
-                    title: Text('Rp 20.000'),
-                    subtitle: Text('Bensin'),
-                    trailing: idx % 2 == 0 ? iconUp : iconDown,
-                  );
-                },
-              ),
+              child: FutureBuilder<List<TransactionModel>>(
+                  future: db.getAllTransaction(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return snapshot.data?.length != 0
+                          ? ListView.builder(
+                              itemCount: snapshot.data?.length,
+                              itemBuilder: (context, idx) {
+                                TransactionModel tr = snapshot.data![idx];
+                                return ListTile(
+                                  leading: Icon(tr.categoryModel?.icon),
+                                  title: Text('Rp ${tr.amount}'),
+                                  subtitle: Text('${tr.categoryModel?.name} - ${tr.note}'),
+                                  trailing: tr.transactionType == TransactionType.Expense ? iconUp : iconDown,
+                                );
+                              },
+                            )
+                          : Center(child: Text('No Transaction Recorded'));
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text('${snapshot.error.toString()}'),
+                      );
+                    }
+                    return Center(child: CircularProgressIndicator());
+                  }),
             ),
           ],
         ),
@@ -113,7 +149,13 @@ class HomeScreen extends StatelessWidget {
             backgroundColor: redColor,
             label: 'Add Expense',
             labelStyle: TextStyle(fontSize: 18.0),
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddExpenseScreen())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AddExpenseScreen(
+                  transactionType: TransactionType.Expense,
+                ),
+              ),
+            ),
           ),
           SpeedDialChild(
             child: Icon(
@@ -123,7 +165,13 @@ class HomeScreen extends StatelessWidget {
             backgroundColor: greenColor,
             label: 'Add Income',
             labelStyle: TextStyle(fontSize: 18.0),
-            onTap: () => print('SECOND CHILD'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AddExpenseScreen(
+                  transactionType: TransactionType.Income,
+                ),
+              ),
+            ),
           ),
         ],
       ),
