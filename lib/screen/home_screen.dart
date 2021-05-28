@@ -1,6 +1,7 @@
 import 'package:expend_tracker/cons/app_color.dart';
 import 'package:expend_tracker/cons/app_cons.dart';
 import 'package:expend_tracker/cons/enum.dart';
+import 'package:expend_tracker/cons/extension.dart';
 import 'package:expend_tracker/model/transaction_model.dart';
 import 'package:expend_tracker/screen/add_transaction_screen.dart';
 import 'package:expend_tracker/utils/app_db.dart';
@@ -78,18 +79,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (snapshot.hasData) {
                       return snapshot.data?.length != 0
                           ? ListView.builder(
+                              physics: BouncingScrollPhysics(),
                               itemCount: snapshot.data?.length,
                               itemBuilder: (context, idx) {
                                 TransactionModel tr = snapshot.data![idx];
                                 return ListTile(
                                   leading: Icon(tr.categoryModel?.icon),
-                                  title: Text('Rp ${tr.amount}'),
-                                  subtitle: Text('${tr.categoryModel?.name} - ${tr.note}'),
+                                  title: Text('${tr.amount.toRupiah()}'),
+                                  subtitle: Text('${tr.categoryModel?.name} - ${tr.note ?? ''}'),
                                   trailing: tr.transactionType == TransactionType.Expense ? iconUp : iconDown,
                                 );
                               },
                             )
-                          : Center(child: Text('No Transaction Recorded'));
+                          : Center(
+                              child: Text('No Transaction Recorded'),
+                            );
                     }
                     if (snapshot.hasError) {
                       return Center(
@@ -149,13 +153,20 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: redColor,
             label: 'Add Expense',
             labelStyle: TextStyle(fontSize: 18.0),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => AddExpenseScreen(
-                  transactionType: TransactionType.Expense,
+            onTap: () {
+              Navigator.of(context)
+                  .push(
+                MaterialPageRoute(
+                  builder: (_) => AddExpenseScreen(
+                    transactionType: TransactionType.Expense,
+                  ),
                 ),
-              ),
-            ),
+              )
+                  .then((value) {
+                print('yes');
+                setState(() {});
+              });
+            },
           ),
           SpeedDialChild(
             child: Icon(
@@ -165,13 +176,20 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: greenColor,
             label: 'Add Income',
             labelStyle: TextStyle(fontSize: 18.0),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => AddExpenseScreen(
-                  transactionType: TransactionType.Income,
+            onTap: () {
+              Navigator.of(context)
+                  .push(
+                MaterialPageRoute(
+                  builder: (_) => AddExpenseScreen(
+                    transactionType: TransactionType.Income,
+                  ),
                 ),
-              ),
-            ),
+              )
+                  .then((value) {
+                print('yes');
+                setState(() {});
+              });
+            },
           ),
         ],
       ),

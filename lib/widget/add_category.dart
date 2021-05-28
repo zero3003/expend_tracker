@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 
@@ -5,8 +7,13 @@ class AddCategoryDialog extends StatefulWidget {
   const AddCategoryDialog({
     Key? key,
     required this.onSave,
+    this.initialText,
+    this.initialIcon,
   }) : super(key: key);
   final Function(String, String) onSave;
+  final String? initialText;
+  final IconData? initialIcon;
+
   @override
   _AddCategoryDialogState createState() => _AddCategoryDialogState();
 }
@@ -17,7 +24,8 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
 
   @override
   void initState() {
-    iconData = Icons.add_shopping_cart;
+    iconData = widget.initialIcon ?? Icons.add_shopping_cart;
+    name.text = widget.initialText ?? '';
     super.initState();
   }
 
@@ -55,23 +63,10 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
                     context,
                     iconPackMode: IconPack.fontAwesomeIcons,
                     iconSize: 32,
-                    title: GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context, IconPack.material);
-                      },
-                      child: Text(
-                        'Pick an Icon',
-                        style: TextStyle(fontFamily: 'ComicNeue'),
-                      ),
-                    ),
                   );
                   if (icon != null) {
                     setState(() {
-                      iconData = IconData(
-                        icon.codePoint,
-                        fontFamily: icon.fontFamily,
-                        fontPackage: icon.fontPackage,
-                      );
+                      iconData = icon;
                     });
                   }
                 },
@@ -90,7 +85,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
         ),
         ElevatedButton(
           onPressed: () async {
-            await widget.onSave(name.text, serializeIcon(iconData!).toString());
+            await widget.onSave(name.text, jsonEncode(serializeIcon(iconData!)));
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(elevation: 0),

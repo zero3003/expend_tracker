@@ -2,7 +2,7 @@ import 'package:expend_tracker/cons/enum.dart';
 import 'package:flutter/material.dart';
 
 class CategoryModel {
-  String id;
+  int id;
   String name;
   IconData icon;
   TransactionType transactionType;

@@ -3,7 +3,6 @@ import 'package:expend_tracker/model/category_model.dart';
 
 class TransactionModel {
   int id;
-  String name;
   String? note;
   double amount;
   CategoryModel? categoryModel;
@@ -12,7 +11,6 @@ class TransactionModel {
 
   TransactionModel({
     required this.id,
-    required this.name,
     this.categoryModel,
     required this.amount,
     this.note,

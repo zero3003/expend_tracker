@@ -16,6 +16,7 @@ class DBHelper {
 
   Future deleteDB() async {
     await deleteDatabase(join(await getDatabasesPath(), '$DB_NAME'));
+    print("DATABASE DELETED");
   }
 
   Future<Database> initDB() async {
@@ -39,32 +40,36 @@ class DBHelper {
         await db.execute(
           'CREATE TABLE $EXPENSE_TABLE('
           'id INTEGER PRIMARY KEY, '
-          'name TEXT, amount DOUBLE, category_id INTEGER, note TEXT,'
+          'amount DOUBLE, category_id INTEGER, note TEXT,'
           'created_at STRING, updated_at STRING, deleted_at STRING,'
           'FOREIGN KEY (category_id) REFERENCES $EXPENSE_CATEGORY_TABLE (id) ON DELETE NO ACTION ON UPDATE NO ACTION)',
         );
         await db.execute(
           'CREATE TABLE $INCOME_TABLE('
           'id INTEGER PRIMARY KEY, '
-          'name TEXT, amount DOUBLE, category_id INTEGER, note TEXT,'
+          'amount DOUBLE, category_id INTEGER, note TEXT,'
           'created_at STRING, updated_at STRING, deleted_at STRING,'
           'FOREIGN KEY (category_id) REFERENCES $INCOME_CATEGORY_TABLE (id) ON DELETE NO ACTION ON UPDATE NO ACTION)',
         );
 
         await db.insert('$INCOME_CATEGORY_TABLE', {
           'name': 'Salary',
+          'icon': '${json.encode({'pack': 'fontAwesomeIcons', 'key': 'moneyCheckAlt'})}',
           'created_at': DateTime.now().toIso8601String(),
         });
         await db.insert('$INCOME_CATEGORY_TABLE', {
           'name': 'Gift',
+          'icon': '${json.encode({'pack': 'fontAwesomeIcons', 'key': 'gift'})}',
           'created_at': DateTime.now().toIso8601String(),
         });
         await db.insert('$EXPENSE_CATEGORY_TABLE', {
           'name': 'Transportation',
+          'icon': '${json.encode({'pack': 'fontAwesomeIcons', 'key': 'bus'})}',
           'created_at': DateTime.now().toIso8601String(),
         });
         await db.insert('$EXPENSE_CATEGORY_TABLE', {
           'name': 'Internet Charge',
+          'icon': '${json.encode({'pack': 'fontAwesomeIcons', 'key': 'internetExplorer'})}',
           'created_at': DateTime.now().toIso8601String(),
         });
         return;
@@ -74,7 +79,6 @@ class DBHelper {
   }
 
   Future insertTransaction({
-    required String name,
     required String amount,
     required int categoryId,
     required TransactionType transactionType,
@@ -91,7 +95,6 @@ class DBHelper {
         break;
     }
     await db.insert('$table', {
-      'name': name,
       'amount': double.parse(amount),
       'category_id': categoryId,
       'note': note,
@@ -100,8 +103,7 @@ class DBHelper {
   }
 
   Future editTransaction({
-    required String id,
-    required String name,
+    required int id,
     required String amount,
     required int categoryId,
     required TransactionType transactionType,
@@ -120,7 +122,6 @@ class DBHelper {
     await db.update(
         '$table',
         {
-          'name': name,
           'amount': double.parse(amount),
           'category_id': categoryId,
           'note': note,
@@ -170,7 +171,7 @@ class DBHelper {
   }
 
   Future editCategory({
-    required String id,
+    required int id,
     required String name,
     required String icon,
     required TransactionType transactionType,
@@ -197,7 +198,7 @@ class DBHelper {
   }
 
   Future deleteCategory({
-    required String id,
+    required int id,
     required TransactionType transactionType,
   }) async {
     Database db = await initDB();
@@ -238,7 +239,6 @@ class DBHelper {
     return List.generate(maps.length, (i) {
       return TransactionModel(
         id: maps[i]['id'],
-        name: maps[i]['name'],
         amount: maps[i]['amount'],
         categoryModel: CategoryModel(
           id: maps[i]['category_id'],
@@ -282,7 +282,7 @@ class DBHelper {
         id: maps[i]['id'],
         name: maps[i]['name'],
         transactionType: type,
-        icon: maps[i]['icon'],
+        icon: deserializeIcon(jsonDecode('${(maps[i]['icon'])}'))!,
       );
     });
   }
