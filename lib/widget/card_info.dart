@@ -5,6 +5,7 @@ class CardInfo extends StatelessWidget {
   final String count;
   final Color color;
   final String bottomText;
+  final GestureTapCallback? onTap;
 
   const CardInfo({
     Key? key,
@@ -12,6 +13,7 @@ class CardInfo extends StatelessWidget {
     required this.count,
     required this.color,
     required this.bottomText,
+    this.onTap,
   }) : super(key: key);
 
   @override
@@ -54,7 +56,7 @@ class CardInfo extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   InkWell(
-                    onTap: () {},
+                    onTap: onTap,
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Row(

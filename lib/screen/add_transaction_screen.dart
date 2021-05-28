@@ -1,15 +1,19 @@
 import 'package:expend_tracker/cons/app_color.dart';
 import 'package:expend_tracker/cons/enum.dart';
+import 'package:expend_tracker/cons/extension.dart';
 import 'package:expend_tracker/model/category_model.dart';
+import 'package:expend_tracker/model/transaction_model.dart';
 import 'package:expend_tracker/screen/category_screen.dart';
 import 'package:expend_tracker/utils/app_db.dart';
+import 'package:expend_tracker/utils/masked_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  AddExpenseScreen({Key? key, required this.transactionType}) : super(key: key);
+  AddExpenseScreen({Key? key, required this.transactionType, this.transactionModel}) : super(key: key);
   final TransactionType transactionType;
+  final TransactionModel? transactionModel;
 
   @override
   _AddExpenseScreenState createState() => _AddExpenseScreenState();
@@ -18,16 +22,33 @@ class AddExpenseScreen extends StatefulWidget {
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   DBHelper db = DBHelper();
 
-  final TextEditingController amountCtrl = TextEditingController();
+  // final TextEditingController amountCtrl = TextEditingController();
   final TextEditingController noteCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController categoryCtrl = TextEditingController();
+  final amountCtrl = MoneyMaskedTextController(
+    decimalSeparator: '',
+    thousandSeparator: ',',
+    initialValue: 0.0,
+    precision: 0,
+    leftSymbol: 'Rp. ',
+  );
+
+  @override
+  void initState() {
+    if (widget.transactionModel != null) {
+      noteCtrl.text = widget.transactionModel?.note ?? '';
+      amountCtrl.text = widget.transactionModel?.amount.toInt().toString() ?? '';
+      categoryCtrl.text = widget.transactionModel?.categoryModel?.id.toString() ?? '';
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Learn UI'),
+        title: Text('Add ${widget.transactionType.getName()}'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -44,6 +65,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           builder: (context, snapshot) {
                             if (snapshot.hasData) {
                               return DropdownButtonFormField(
+                                value: categoryCtrl.text.isNotEmpty ? categoryCtrl.text : null,
                                 validator: (value) {
                                   if (value == null) {
                                     return 'Please choose category';
@@ -119,7 +141,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 TextFormField(
                   controller: amountCtrl,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (val) {
                     if (val == null || val.isEmpty) {
                       return 'Please fill the amount';
@@ -163,11 +184,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   child: ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        await db.insertTransaction(
-                            amount: amountCtrl.text,
+                        if (widget.transactionModel != null) {
+                          await db.editTransaction(
+                            id: widget.transactionModel!.id,
+                            amount: amountCtrl.numberValue,
                             categoryId: int.parse(categoryCtrl.text),
                             transactionType: widget.transactionType,
-                            note: noteCtrl.text);
+                            note: noteCtrl.text,
+                          );
+                        } else {
+                          await db.insertTransaction(
+                              amount: amountCtrl.numberValue,
+                              categoryId: int.parse(categoryCtrl.text),
+                              transactionType: widget.transactionType,
+                              note: noteCtrl.text);
+                        }
                         Navigator.pop(context);
                       }
                     },

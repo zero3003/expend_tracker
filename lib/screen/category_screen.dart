@@ -1,4 +1,5 @@
 import 'package:expend_tracker/cons/enum.dart';
+import 'package:expend_tracker/cons/extension.dart';
 import 'package:expend_tracker/model/category_model.dart';
 import 'package:expend_tracker/utils/app_db.dart';
 import 'package:expend_tracker/widget/add_category.dart';
@@ -19,16 +20,8 @@ class _ManageCategoryScreenState extends State<ManageCategoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Learn UI'),
+        title: Text('Manage Category'),
       ),
-      // floatingActionButton: TextFieldFloatingActionButton(
-      //   'Search...',
-      //   Icons.add,
-      //   onChange: (String query) {
-      //     print('$query');
-      //   },
-      //   onClear: () {},
-      // ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
@@ -55,7 +48,7 @@ class _ManageCategoryScreenState extends State<ManageCategoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Category',
+              'Category ${widget.transactionType.getName()}',
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(
@@ -102,6 +95,8 @@ class _ManageCategoryScreenState extends State<ManageCategoryScreen> {
                                         builder: (context) {
                                           return AlertDialog(
                                             title: Text('Delete Category'),
+                                            content: Text(
+                                                'Warning! Delete category will also delete all transaction that belongs to the category.'),
                                             actions: [
                                               OutlinedButton(
                                                 onPressed: () {

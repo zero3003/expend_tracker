@@ -4,10 +4,13 @@ import 'package:expend_tracker/cons/enum.dart';
 import 'package:expend_tracker/cons/extension.dart';
 import 'package:expend_tracker/model/transaction_model.dart';
 import 'package:expend_tracker/screen/add_transaction_screen.dart';
+import 'package:expend_tracker/screen/transaction_screen.dart';
 import 'package:expend_tracker/utils/app_db.dart';
 import 'package:expend_tracker/widget/card_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+
+import 'category_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -19,20 +22,90 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DBHelper db = DBHelper();
 
+  void refresh() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Learn UI'),
+        title: Text(
+          'Expense Tracker',
+        ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: InkWell(
-              onTap: () {
-                db.deleteDB();
-              },
-              child: Icon(Icons.reset_tv),
-            ),
+          IconButton(
+            icon: Icon(Icons.reset_tv),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('Reset Database'),
+                      content: Text('You wil lose all your record.'),
+                      actions: [
+                        OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await db.deleteDB();
+                            await db.initDB();
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(elevation: 0, primary: Colors.redAccent),
+                          child: Text('Reset'),
+                        ),
+                      ],
+                    );
+                  }).then((value) => refresh());
+            },
+            splashRadius: 24,
+          ),
+          IconButton(
+            icon: Icon(Icons.category),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('Setting Category'),
+                      content: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ManageCategoryScreen(transactionType: TransactionType.Expense),
+                                ),
+                              );
+                            },
+                            child: Text('Expense'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ManageCategoryScreen(transactionType: TransactionType.Income),
+                                ),
+                              );
+                            },
+                            child: Text('Income'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).then((value) => refresh());
+            },
+            splashRadius: 24,
           ),
         ],
       ),
@@ -41,32 +114,60 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: CardInfo(
-                    label: 'My Budget',
-                    count: 'Rp 15.000',
-                    color: primaryColor,
-                    bottomText: 'Income History',
-                  ),
-                ),
-                Expanded(
-                  child: CardInfo(
-                    label: 'My Expenses',
-                    count: 'Rp. 10.000',
-                    color: redColor,
-                    bottomText: 'Outcome History',
-                  ),
-                ),
-              ],
-            ),
+            FutureBuilder<List<double>>(
+                future: db.getStats(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: CardInfo(
+                            label: 'My Budget',
+                            count: '${snapshot.data![0].toRupiah()}',
+                            color: primaryColor,
+                            bottomText: 'Income History',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TransactionScreen(transactionType: TransactionType.Income),
+                                ),
+                              ).then((value) => refresh());
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: CardInfo(
+                            label: 'My Expenses',
+                            count: '${snapshot.data![1].toRupiah()}',
+                            color: redColor,
+                            bottomText: 'Expense History',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TransactionScreen(transactionType: TransactionType.Expense),
+                                ),
+                              ).then((value) => refresh());
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('${snapshot.error.toString()}'),
+                    );
+                  }
+                  return Center(child: CircularProgressIndicator());
+                }),
             Divider(
               color: primaryColor,
               height: 34,
             ),
             Text(
-              'Riwayat Transaksi',
+              'Transaction History',
               style: Theme.of(context).textTheme.headline6,
             ),
             SizedBox(
@@ -156,16 +257,13 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.of(context)
                   .push(
-                MaterialPageRoute(
-                  builder: (_) => AddExpenseScreen(
-                    transactionType: TransactionType.Expense,
-                  ),
-                ),
-              )
-                  .then((value) {
-                print('yes');
-                setState(() {});
-              });
+                    MaterialPageRoute(
+                      builder: (_) => AddExpenseScreen(
+                        transactionType: TransactionType.Expense,
+                      ),
+                    ),
+                  )
+                  .then((value) => refresh());
             },
           ),
           SpeedDialChild(
@@ -179,16 +277,13 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.of(context)
                   .push(
-                MaterialPageRoute(
-                  builder: (_) => AddExpenseScreen(
-                    transactionType: TransactionType.Income,
-                  ),
-                ),
-              )
-                  .then((value) {
-                print('yes');
-                setState(() {});
-              });
+                    MaterialPageRoute(
+                      builder: (_) => AddExpenseScreen(
+                        transactionType: TransactionType.Income,
+                      ),
+                    ),
+                  )
+                  .then((value) => refresh());
             },
           ),
         ],

@@ -42,14 +42,14 @@ class DBHelper {
           'id INTEGER PRIMARY KEY, '
           'amount DOUBLE, category_id INTEGER, note TEXT,'
           'created_at STRING, updated_at STRING, deleted_at STRING,'
-          'FOREIGN KEY (category_id) REFERENCES $EXPENSE_CATEGORY_TABLE (id) ON DELETE NO ACTION ON UPDATE NO ACTION)',
+          'FOREIGN KEY (category_id) REFERENCES $EXPENSE_CATEGORY_TABLE (id) ON DELETE CASCADE)',
         );
         await db.execute(
           'CREATE TABLE $INCOME_TABLE('
           'id INTEGER PRIMARY KEY, '
           'amount DOUBLE, category_id INTEGER, note TEXT,'
           'created_at STRING, updated_at STRING, deleted_at STRING,'
-          'FOREIGN KEY (category_id) REFERENCES $INCOME_CATEGORY_TABLE (id) ON DELETE NO ACTION ON UPDATE NO ACTION)',
+          'FOREIGN KEY (category_id) REFERENCES $INCOME_CATEGORY_TABLE (id) ON DELETE CASCADE)',
         );
 
         await db.insert('$INCOME_CATEGORY_TABLE', {
@@ -79,7 +79,7 @@ class DBHelper {
   }
 
   Future insertTransaction({
-    required String amount,
+    required double amount,
     required int categoryId,
     required TransactionType transactionType,
     String? note,
@@ -95,7 +95,7 @@ class DBHelper {
         break;
     }
     await db.insert('$table', {
-      'amount': double.parse(amount),
+      'amount': amount,
       'category_id': categoryId,
       'note': note,
       'created_at': DateTime.now().toIso8601String(),
@@ -104,7 +104,7 @@ class DBHelper {
 
   Future editTransaction({
     required int id,
-    required String amount,
+    required double amount,
     required int categoryId,
     required TransactionType transactionType,
     String? note,
@@ -122,7 +122,7 @@ class DBHelper {
     await db.update(
         '$table',
         {
-          'amount': double.parse(amount),
+          'amount': amount,
           'category_id': categoryId,
           'note': note,
           'updated_at': DateTime.now().toIso8601String(),
@@ -132,7 +132,7 @@ class DBHelper {
   }
 
   Future deleteTransaction({
-    required String id,
+    required int id,
     required TransactionType transactionType,
   }) async {
     Database db = await initDB();
@@ -234,8 +234,8 @@ class DBHelper {
         "$tableCategory.name as category_name, $tableCategory.icon as category_icon "
         "FROM $table INNER JOIN $tableCategory "
         "WHERE $table.category_id == $tableCategory.id");
-    print(type);
-    print(maps.toString());
+    // print(type);
+    // print(maps.toString());
     return List.generate(maps.length, (i) {
       return TransactionModel(
         id: maps[i]['id'],
@@ -259,7 +259,7 @@ class DBHelper {
 
     List<TransactionModel> trans = List<TransactionModel>.from(expense)..addAll(income);
     trans.sort((a, b) {
-      return a.createdAt.compareTo(b.createdAt);
+      return b.createdAt.compareTo(a.createdAt);
     });
     return trans;
   }
@@ -285,5 +285,20 @@ class DBHelper {
         icon: deserializeIcon(jsonDecode('${(maps[i]['icon'])}'))!,
       );
     });
+  }
+
+  Future<List<double>> getStats() async {
+    List<TransactionModel> expense = await getTransaction(TransactionType.Expense);
+    List<TransactionModel> income = await getTransaction(TransactionType.Income);
+    double incomeCount = 0.0;
+    for (TransactionModel trans in income) {
+      incomeCount += trans.amount;
+    }
+    double expenseCount = 0.0;
+    for (TransactionModel trans in expense) {
+      expenseCount += trans.amount;
+    }
+
+    return [incomeCount - expenseCount, expenseCount];
   }
 }
